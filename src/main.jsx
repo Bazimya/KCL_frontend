@@ -6,7 +6,10 @@ import './index.css'
 import { ThemeProvider } from './context/ThemeContext.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
 import { CartProvider } from './context/CartContext.jsx'
+import { WishlistProvider } from './context/WishlistContext.jsx'
 import { SettingsProvider } from './context/SettingsContext.jsx'
+import { TableProvider } from './context/TableContext.jsx'
+import { DineInPromptProvider } from './context/DineInPromptContext.jsx'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -15,7 +18,13 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <SettingsProvider>
           <AuthProvider>
             <CartProvider>
-              <App />
+              <WishlistProvider>
+                <TableProvider>
+                  <DineInPromptProvider>
+                    <App />
+                  </DineInPromptProvider>
+                </TableProvider>
+              </WishlistProvider>
             </CartProvider>
           </AuthProvider>
         </SettingsProvider>

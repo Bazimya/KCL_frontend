@@ -2,22 +2,33 @@ import { Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
+import BottomNav from './components/BottomNav'
+import AdminFab from './components/AdminFab'
+import DineInPromptModal from './components/DineInPromptModal'
+import ScrollToTop from './components/ScrollToTop'
 import useTrackVisit from './hooks/useTrackVisit'
 
 import Home from './pages/Home'
 import Shop from './pages/Shop'
 import ProductDetail from './pages/ProductDetail'
-import Services from './pages/Services'
+import MenuCategory from './pages/MenuCategory'
+import CourseHub from './pages/CourseHub'
+import CoffeeTherapy from './pages/CoffeeTherapy'
+import CoffeeExperience from './pages/CoffeeExperience'
+import TrainingHub from './pages/TrainingHub'
+import TrainingCourseDetail from './pages/TrainingCourseDetail'
+import TrainingApply from './pages/TrainingApply'
+import History from './pages/History'
+import TableScan from './pages/TableScan'
+import BookTable from './pages/BookTable'
 import MissionVision from './pages/MissionVision'
 import Contact from './pages/Contact'
-import BaristaApply from './pages/BaristaApply'
 import About from './pages/About'
 import Cart from './pages/Cart'
 import Checkout from './pages/Checkout'
+import TrackOrder from './pages/TrackOrder'
 import Login from './pages/Login'
-import Register from './pages/Register'
 import Wishlist from './pages/Wishlist'
-import MyOrders from './pages/MyOrders'
 import NotFound from './pages/NotFound'
 
 import AdminLayout from './pages/admin/AdminLayout'
@@ -27,16 +38,29 @@ import AdminDrinks from './pages/admin/Drinks'
 import AdminOrders from './pages/admin/Orders'
 import AdminUsers from './pages/admin/Users'
 import AdminSettings from './pages/admin/Settings'
-import AdminBarista from './pages/admin/Barista'
+import AdminTraining from './pages/admin/Training'
+import AdminHistory from './pages/admin/History'
+import AdminReports from './pages/admin/Reports'
+import AdminTables from './pages/admin/Tables'
 
-import { RequireAuth, RequireStaff } from './components/ProtectedRoute'
+import { RequireStaff } from './components/ProtectedRoute'
 
+// Every customer-facing page gets the same shell: top bar, the page itself,
+// footer, a persistent mobile-style bottom tab bar (Menu/Coffee/Course/
+// Machine/More), and the small floating Staff/Admin entry point in the
+// bottom-right corner. pb-20 keeps content clear of the fixed bottom bar.
 function StorefrontLayout({ children }) {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-cream">
       <Navbar />
-      <main className="flex-1">{children}</main>
-      <Footer />
+      <main className="flex-1 pb-20 lg:pb-0 bg-gray-200">{children}</main>
+      {/* <Footer /> */}
+      <div className="-mt-24">
+        <Footer />
+      </div>
+      <BottomNav />
+      <AdminFab />
+      <DineInPromptModal />
     </div>
   )
 }
@@ -46,6 +70,7 @@ export default function App() {
 
   return (
     <>
+      <ScrollToTop />
       <Toaster
         position="top-right"
         toastOptions={{
@@ -64,21 +89,37 @@ export default function App() {
       />
 
       <Routes>
-        {/* Storefront */}
+        {/* Storefront - fully guest, no registration needed anywhere here */}
         <Route path="/" element={<StorefrontLayout><Home /></StorefrontLayout>} />
+        <Route path="/coffee" element={<StorefrontLayout><MenuCategory type="coffee" /></StorefrontLayout>} />
+        <Route path="/food" element={<StorefrontLayout><MenuCategory type="food" /></StorefrontLayout>} />
         <Route path="/shop" element={<StorefrontLayout><Shop /></StorefrontLayout>} />
         <Route path="/product/:hash" element={<StorefrontLayout><ProductDetail /></StorefrontLayout>} />
-        <Route path="/services" element={<StorefrontLayout><Services /></StorefrontLayout>} />
+
+        {/* Course section: Coffee Therapy, Coffee Experience, Coffee Training */}
+        <Route path="/course" element={<StorefrontLayout><CourseHub /></StorefrontLayout>} />
+        <Route path="/course/therapy" element={<StorefrontLayout><CoffeeTherapy /></StorefrontLayout>} />
+        <Route path="/course/experience" element={<StorefrontLayout><CoffeeExperience /></StorefrontLayout>} />
+        <Route path="/course/training" element={<StorefrontLayout><TrainingHub /></StorefrontLayout>} />
+        <Route path="/course/training/apply" element={<StorefrontLayout><TrainingApply /></StorefrontLayout>} />
+        <Route path="/course/training/:courseType" element={<StorefrontLayout><TrainingCourseDetail /></StorefrontLayout>} />
+
+        <Route path="/history" element={<StorefrontLayout><History /></StorefrontLayout>} />
+
+        {/* QR table ordering + reservations */}
+        <Route path="/t/:qrToken" element={<StorefrontLayout><TableScan /></StorefrontLayout>} />
+        <Route path="/book-table" element={<StorefrontLayout><BookTable /></StorefrontLayout>} />
+
         <Route path="/mission-vision" element={<StorefrontLayout><MissionVision /></StorefrontLayout>} />
         <Route path="/contact" element={<StorefrontLayout><Contact /></StorefrontLayout>} />
-        <Route path="/barista/apply" element={<StorefrontLayout><BaristaApply /></StorefrontLayout>} />
         <Route path="/about" element={<StorefrontLayout><About /></StorefrontLayout>} />
         <Route path="/cart" element={<StorefrontLayout><Cart /></StorefrontLayout>} />
-        <Route path="/checkout" element={<StorefrontLayout><RequireAuth><Checkout /></RequireAuth></StorefrontLayout>} />
+        <Route path="/checkout" element={<StorefrontLayout><Checkout /></StorefrontLayout>} />
+        <Route path="/track" element={<StorefrontLayout><TrackOrder /></StorefrontLayout>} />
+        <Route path="/wishlist" element={<StorefrontLayout><Wishlist /></StorefrontLayout>} />
+
+        {/* Staff / Admin only */}
         <Route path="/login" element={<StorefrontLayout><Login /></StorefrontLayout>} />
-        <Route path="/register" element={<StorefrontLayout><Register /></StorefrontLayout>} />
-        <Route path="/wishlist" element={<StorefrontLayout><RequireAuth><Wishlist /></RequireAuth></StorefrontLayout>} />
-        <Route path="/my-orders" element={<StorefrontLayout><RequireAuth><MyOrders /></RequireAuth></StorefrontLayout>} />
 
         {/* Admin / Manager panel */}
         <Route path="/admin" element={<RequireStaff><AdminLayout /></RequireStaff>}>
@@ -87,7 +128,10 @@ export default function App() {
           <Route path="drinks" element={<RequireStaff permission="manageDrinks"><AdminDrinks /></RequireStaff>} />
           <Route path="orders" element={<RequireStaff permission="manageOrders"><AdminOrders /></RequireStaff>} />
           <Route path="users" element={<RequireStaff permission="manageUsers"><AdminUsers /></RequireStaff>} />
-          <Route path="barista" element={<RequireStaff permission="manageBarista"><AdminBarista /></RequireStaff>} />
+          <Route path="training" element={<RequireStaff permission="manageTrainings"><AdminTraining /></RequireStaff>} />
+          <Route path="history" element={<RequireStaff permission="manageHistory"><AdminHistory /></RequireStaff>} />
+          <Route path="reports" element={<RequireStaff permission="manageReports"><AdminReports /></RequireStaff>} />
+          <Route path="tables" element={<RequireStaff permission="manageTables"><AdminTables /></RequireStaff>} />
           <Route path="settings" element={<RequireStaff permission="manageSettings"><AdminSettings /></RequireStaff>} />
         </Route>
 

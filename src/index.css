@@ -113,6 +113,17 @@ h1, h2, h3, .font-display {
 
 .animate-fadeUp { animation: fadeUp .6s ease forwards; }
 
+/* A gentle, living pulse for an order card that's still "in play" - stops
+   the moment it reaches a finished state (Served/Delivered/Cancelled). */
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  14% { transform: scale(1.018); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.018); }
+  70% { transform: scale(1); }
+}
+.animate-heartbeat { animation: heartbeat 1.8s ease-in-out infinite; }
+
 /* Reusable "beautiful" pagination pill button */
 .page-btn {
   @apply w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-colors border border-espresso-100 text-espresso-600 hover:bg-espresso-100 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent;

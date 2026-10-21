@@ -28,9 +28,10 @@ export default function Footer() {
           <h4 className="font-display font-bold mb-3">Shop</h4>
           <ul className="space-y-2 text-sm text-cream-light/70">
             <li><Link to="/shop" className="hover:text-gold">Coffee Machines</Link></li>
-            <li><Link to="/services" className="hover:text-gold">Drinks Menu</Link></li>
-            <li><Link to="/services#barista" className="hover:text-gold">Barista Training</Link></li>
-            <li><Link to="/my-orders" className="hover:text-gold">Track My Order</Link></li>
+            <li><Link to="/coffee" className="hover:text-gold">Drinks Menu</Link></li>
+            <li><Link to="/course/training" className="hover:text-gold">Coffee Training</Link></li>
+            <li><Link to="/book-table" className="hover:text-gold">Reserve a Table</Link></li>
+            <li><Link to="/track" className="hover:text-gold">Track My Order</Link></li>
           </ul>
         </div>
 
@@ -38,9 +39,9 @@ export default function Footer() {
           <h4 className="font-display font-bold mb-3">Company</h4>
           <ul className="space-y-2 text-sm text-cream-light/70">
             <li><Link to="/about" className="hover:text-gold">About Us</Link></li>
+            <li><Link to="/history" className="hover:text-gold">History</Link></li>
             <li><Link to="/mission-vision" className="hover:text-gold">Mission &amp; Vision</Link></li>
             <li><Link to="/contact" className="hover:text-gold">Contact</Link></li>
-            <li><Link to="/login" className="hover:text-gold">Account</Link></li>
           </ul>
         </div>
 
@@ -49,7 +50,7 @@ export default function Footer() {
           <ul className="space-y-3 text-sm text-cream-light/70">
             <li className="flex items-center gap-2"><Phone size={15} className="text-gold" /> {settings.phone}</li>
             <li className="flex items-center gap-2"><MapPin size={15} className="text-gold" /> {settings.address}</li>
-            <li className="flex items-center gap-2"><Mail size={15} className="text-gold" /> hello@kigalicoffeelab.rw</li>
+            <li className="flex items-center gap-2"><Mail size={15} className="text-gold" /> admin@kigalicoffeelab.com</li>
           </ul>
         </div>
       </div>
