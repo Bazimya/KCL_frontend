@@ -11,8 +11,8 @@ npm install
 npm run dev      # http://localhost:5173
 ```
 
-The dev server proxies `/api` and `/uploads` to `http://localhost:4000` (the backend's
-default port, see `backend/.env_example`), see `vite.config.js`. Make sure the backend
+The dev server proxies `/api` and `/uploads` to `http://localhost:5050` (the backend's
+default port, see `KCL_backend/.env_example`), see `vite.config.js`. Make sure the backend
 is running and seeded (`npm run seed` in the backend folder) before you start. If your
 backend runs on a different port, update the proxy `target` in `vite.config.js`.
 
