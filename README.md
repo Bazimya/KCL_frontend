@@ -1,5 +1,7 @@
 # Kigali Coffee Lab (KCL): Frontend
 
+GitHub repository: `KCL_frontend`.
+
 React + Vite + Tailwind storefront and admin panel for Kigali Coffee Lab - order
 coffee, food, or a coffee machine, and apply for barista training, all with **no
 customer registration**. Staff/Admin sign in separately to run the shop.
