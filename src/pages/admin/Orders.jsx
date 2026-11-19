@@ -102,6 +102,8 @@ export default function AdminOrders() {
   const [period, setPeriod] = useState('today')
   const [page, setPage] = useState(1)
   const [viewOrder, setViewOrder] = useState(null)
+  const [proofUrl, setProofUrl] = useState(null)
+  const [proofError, setProofError] = useState(false)
   const [stats, setStats] = useState(null)
 
   // { orderId, status } while the "how many minutes until ready?" prompt is open
@@ -124,6 +126,31 @@ export default function AdminOrders() {
   useEffect(() => { load() }, [filter, search, period, page])
   useEffect(() => { setPage(1) }, [filter, search, period])
   useEffect(() => { loadStats() }, [])
+  useEffect(() => {
+    let active = true
+    let objectUrl
+    setProofUrl(null)
+    setProofError(false)
+    if (!viewOrder?.proofOfPayment) return undefined
+
+    api.get(`/orders/${viewOrder._id}/proof`, { responseType: 'blob' })
+      .then(({ data }) => {
+        objectUrl = URL.createObjectURL(data)
+        if (active) setProofUrl(objectUrl)
+        else URL.revokeObjectURL(objectUrl)
+      })
+      .catch(() => {
+        if (active) {
+          setProofError(true)
+          toast.error('Could not load payment proof')
+        }
+      })
+
+    return () => {
+      active = false
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
+  }, [viewOrder?._id, viewOrder?.proofOfPayment])
 
   // Polls for brand-new orders regardless of whatever filter/period staff
   // currently have selected (a new order is always "today", so this
@@ -363,7 +390,9 @@ export default function AdminOrders() {
             {viewOrder.proofOfPayment ? (
               <div>
                 <p className="font-semibold text-espresso-700 mb-2 text-sm">Proof of Payment</p>
-                <img src={fileUrl(viewOrder.proofOfPayment)} className="rounded-xl max-h-72 border border-espresso-100" />
+                {proofUrl
+                  ? <img src={proofUrl} className="rounded-xl max-h-72 border border-espresso-100" />
+                  : <p className="text-sm text-espresso-400">{proofError ? 'Payment proof could not be loaded.' : 'Loading proof...'}</p>}
               </div>
             ) : (
               <p className="text-sm text-espresso-400 italic">No proof of payment uploaded yet.</p>

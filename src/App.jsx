@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import Navbar from './components/Navbar'
@@ -7,6 +8,7 @@ import AdminFab from './components/AdminFab'
 import DineInPromptModal from './components/DineInPromptModal'
 import ScrollToTop from './components/ScrollToTop'
 import useTrackVisit from './hooks/useTrackVisit'
+import Loader from './components/Loader'
 
 import Home from './pages/Home'
 import Shop from './pages/Shop'
@@ -31,17 +33,19 @@ import Login from './pages/Login'
 import Wishlist from './pages/Wishlist'
 import NotFound from './pages/NotFound'
 
-import AdminLayout from './pages/admin/AdminLayout'
-import Dashboard from './pages/admin/Dashboard'
-import AdminProducts from './pages/admin/Products'
-import AdminDrinks from './pages/admin/Drinks'
-import AdminOrders from './pages/admin/Orders'
-import AdminUsers from './pages/admin/Users'
-import AdminSettings from './pages/admin/Settings'
-import AdminTraining from './pages/admin/Training'
-import AdminHistory from './pages/admin/History'
-import AdminReports from './pages/admin/Reports'
-import AdminTables from './pages/admin/Tables'
+// Admin pages (and recharts, which only they use) are split into their own
+// chunks so customers on mobile data never download the staff panel.
+const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'))
+const Dashboard = lazy(() => import('./pages/admin/Dashboard'))
+const AdminProducts = lazy(() => import('./pages/admin/Products'))
+const AdminDrinks = lazy(() => import('./pages/admin/Drinks'))
+const AdminOrders = lazy(() => import('./pages/admin/Orders'))
+const AdminUsers = lazy(() => import('./pages/admin/Users'))
+const AdminSettings = lazy(() => import('./pages/admin/Settings'))
+const AdminTraining = lazy(() => import('./pages/admin/Training'))
+const AdminHistory = lazy(() => import('./pages/admin/History'))
+const AdminReports = lazy(() => import('./pages/admin/Reports'))
+const AdminTables = lazy(() => import('./pages/admin/Tables'))
 
 import { RequireStaff } from './components/ProtectedRoute'
 
@@ -88,6 +92,7 @@ export default function App() {
         }}
       />
 
+      <Suspense fallback={<Loader />}>
       <Routes>
         {/* Storefront - fully guest, no registration needed anywhere here */}
         <Route path="/" element={<StorefrontLayout><Home /></StorefrontLayout>} />
@@ -137,6 +142,7 @@ export default function App() {
 
         <Route path="*" element={<StorefrontLayout><NotFound /></StorefrontLayout>} />
       </Routes>
+      </Suspense>
     </>
   )
 }

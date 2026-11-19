@@ -195,7 +195,7 @@ export default function TrackOrder() {
                 <ImageIcon size={18} className="text-green-700 shrink-0" />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-green-800">Proof of payment uploaded</p>
-                  <a href={fileUrl(order.proofOfPayment)} target="_blank" rel="noreferrer" className="text-xs text-green-700 underline">View it</a>
+                  <p className="text-xs text-green-700">Staff will review it shortly.</p>
                 </div>
               </div>
             ) : (

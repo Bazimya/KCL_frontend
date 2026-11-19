@@ -48,7 +48,7 @@ export default function MyOrders() {
     try {
       const fd = new FormData()
       fd.append('proof', file)
-      await api.post(`/orders/${id}/proof`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+      await api.post(`/orders/user-orders/${id}/proof`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
       toast.success('Proof uploaded!')
       load()
     } catch {
@@ -98,9 +98,7 @@ export default function MyOrders() {
                     </label>
                   )}
                   {o.proofOfPayment && (
-                    <a href={fileUrl(o.proofOfPayment)} target="_blank" rel="noreferrer" className="text-xs text-gold-dark font-semibold underline">
-                      View uploaded proof
-                    </a>
+                    <span className="text-xs text-espresso-500">Proof uploaded for staff review</span>
                   )}
                   {o.orderStatus === 'Order Placed' && (
                     <button onClick={() => cancelOrder(o._id)} className="btn-ghost !text-red-600 !py-2 !px-3 text-xs">

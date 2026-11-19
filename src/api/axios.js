@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-// In dev, Vite proxies /api -> http://localhost:4000 (see vite.config.js)
+// In dev, Vite proxies /api -> the backend (see vite.config.js)
 // In prod, set VITE_API_URL to your deployed backend URL.
 const baseURL = import.meta.env.VITE_API_URL || '/api'
 
@@ -24,7 +24,8 @@ export const fileUrl = (p) => {
   if (p.startsWith('http')) return p
   // In dev, Vite proxies /uploads straight to the backend (see vite.config.js).
   // In prod, set VITE_UPLOADS_URL to your backend origin (no /api suffix).
-  const base = import.meta.env.VITE_UPLOADS_URL || ''
+  // Falls back to VITE_API_URL, since uploads are served by the same backend.
+  const base = (import.meta.env.VITE_UPLOADS_URL || import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
   return `${base}${p}`
 }
 

@@ -18,6 +18,26 @@ default port, see `KCL_backend/.env_example`), see `vite.config.js`. Make sure t
 is running and seeded (`npm run seed` in the backend folder) before you start. If your
 backend runs on a different port, update the proxy `target` in `vite.config.js`.
 
+## Production deployment
+
+1. Set the backend's public origin **at build time** (Vite bakes it into the
+   bundle). In the host's build environment, or a `.env.production` file:
+   ```
+   VITE_API_URL=https://api.yourdomain.com
+   # optional, defaults to VITE_API_URL:
+   # VITE_UPLOADS_URL=https://api.yourdomain.com
+   ```
+   `npm run build` refuses to run without `VITE_API_URL`.
+2. Build: `npm ci && npm run build` and serve the `dist/` folder.
+3. **SPA fallback is required.** Every route (e.g. `/t/<qrToken>` from the
+   table QR stickers, `/admin/orders`) must serve `index.html`. Included:
+   - Netlify / Cloudflare Pages: `public/_redirects` (copied into `dist/`)
+   - Vercel: `vercel.json`
+   - nginx: see `nginx.conf.example` (`try_files $uri $uri/ /index.html`)
+4. Serve over **HTTPS** - the in-browser QR camera scanner only works on a
+   secure origin.
+5. Add this site's exact origin to the backend's `FRONTEND_URL`.
+
 ## Default staff logins (from backend seed script)
 
 | Role    | Email                          | Password     |
