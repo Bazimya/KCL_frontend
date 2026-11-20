@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { Search, Bell, XCircle, Upload, ImageIcon } from 'lucide-react'
+import { Search, Bell, XCircle, Upload, ImageIcon, History, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api, { fileUrl } from '../api/axios'
 import { formatDateTime } from '../utils/format'
 import { ORDER_TYPE_LABELS, STAGES } from '../utils/orderStages'
 import EtaCountdown from '../components/EtaCountdown'
 import OrderCodeInput from '../components/OrderCodeInput'
+import { getRecentOrders, rememberOrder, forgetOrder } from '../utils/recentOrders'
 
 const LAST_CODE_KEY = 'kcl_last_order_code'
 
@@ -16,6 +17,7 @@ export default function TrackOrder() {
   const [error, setError] = useState(null)
   const [uploadingProof, setUploadingProof] = useState(false)
   const trackedCode = useRef(null)
+  const [recent, setRecent] = useState(getRecentOrders)
 
   const [notifications, setNotifications] = useState([])
   const [unreadCount, setUnreadCount] = useState(0)
@@ -31,6 +33,10 @@ export default function TrackOrder() {
       setOrder(data)
       trackedCode.current = trimmed
       localStorage.setItem(LAST_CODE_KEY, trimmed)
+      if (!silent) {
+        rememberOrder(data)
+        setRecent(getRecentOrders())
+      }
     } catch (e) {
       setOrder(null)
       setError(e.response?.data?.msg || 'Order not found')
@@ -146,8 +152,45 @@ export default function TrackOrder() {
         </button>
       </form>
 
+      {recent.length > 0 && (
+        <div className="mb-8">
+          <p className="flex items-center gap-1.5 text-sm font-semibold text-espresso-700 mb-2">
+            <History size={15} /> Your orders on this device
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {recent.map((o) => (
+              <span key={o.code} className={`inline-flex items-center rounded-full border text-sm ${o.code === order?.orderCode ? 'border-espresso-900 bg-espresso-900 text-cream-light' : 'border-espresso-200 bg-white text-espresso-800'}`}>
+                <button
+                  type="button"
+                  onClick={() => { setCode(o.code); load(o.code); loadNotifications(o.code) }}
+                  className="pl-3 pr-1 py-1.5 font-mono font-semibold"
+                  title={`Placed ${formatDateTime(o.placedAt)}`}
+                >
+                  {o.code}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { forgetOrder(o.code); setRecent(getRecentOrders()) }}
+                  className="pr-2 pl-1 py-1.5 opacity-60 hover:opacity-100"
+                  aria-label={`Remove ${o.code} from this device`}
+                >
+                  <X size={13} />
+                </button>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {error && (
         <div className="card p-4 border-red-200 bg-red-50 text-red-700 mb-6">{error}</div>
+      )}
+
+      {!order && (
+        <p className="text-sm text-espresso-500 mb-6">
+          <strong>Lost your order number?</strong> Ask our staff at the counter, or call us. We can find your
+          order with the phone number or name you used at checkout.
+        </p>
       )}
 
       {order && (

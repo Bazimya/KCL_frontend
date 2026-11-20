@@ -264,7 +264,7 @@ export default function AdminOrders() {
       <div className="card p-4 mb-6 flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-espresso-300" />
-          <input className="input !pl-10" placeholder="Search by order id, contact or name..." value={search} onChange={(e) => setSearch(e.target.value)} />
+          <input className="input !pl-10" placeholder="Search by order number, phone, name or email..." value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
         <select className="input sm:!w-56" value={filter} onChange={(e) => setFilter(e.target.value)}>
           <option value="">All statuses</option>

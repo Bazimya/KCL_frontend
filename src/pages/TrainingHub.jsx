@@ -23,7 +23,7 @@ export default function TrainingHub() {
 
       <section className="container-app py-16 grid sm:grid-cols-2 gap-6">
         {courses.map((c) => (
-          <Link key={c.type} to={`/course/training/${c.type}`} className="card p-6 hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
+          <Link key={c.type} to={`/course/training/${c.type}`} className="card p-6 hover:shadow-xl transition-all duration-300">
             <div className="flex items-start justify-between">
               <span className="w-14 h-14 rounded-2xl bg-gold/15 text-gold-dark flex items-center justify-center">
                 <c.icon size={26} />

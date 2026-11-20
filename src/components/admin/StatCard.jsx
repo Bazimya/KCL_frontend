@@ -8,7 +8,7 @@ export default function StatCard({ icon: Icon, label, value, accent = 'bg-espres
       type={onClick ? 'button' : undefined}
       onClick={onClick}
       className={`card p-5 flex items-center gap-4 text-left w-full transition ${
-        onClick ? 'hover:shadow-md hover:-translate-y-0.5 cursor-pointer' : ''
+        onClick ? 'hover:shadow-md cursor-pointer' : ''
       } ${active ? 'ring-2 ring-gold border-gold' : ''}`}
     >
       <span className={`w-12 h-12 rounded-xl ${accent} text-cream-light flex items-center justify-center shrink-0`}>

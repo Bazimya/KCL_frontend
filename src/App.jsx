@@ -52,16 +52,14 @@ import { RequireStaff } from './components/ProtectedRoute'
 // Every customer-facing page gets the same shell: top bar, the page itself,
 // footer, a persistent mobile-style bottom tab bar (Menu/Coffee/Course/
 // Machine/More), and the small floating Staff/Admin entry point in the
-// bottom-right corner. pb-20 keeps content clear of the fixed bottom bar.
+// bottom-right corner. The footer reserves room for the fixed bottom bar on
+// mobile, so nothing on the page ends up underneath it.
 function StorefrontLayout({ children }) {
   return (
     <div className="min-h-screen flex flex-col bg-cream">
       <Navbar />
-      <main className="flex-1 pb-20 lg:pb-0 bg-gray-200">{children}</main>
-      {/* <Footer /> */}
-      <div className="-mt-24">
-        <Footer />
-      </div>
+      <main className="flex-1 pb-12 bg-gray-200">{children}</main>
+      <Footer />
       <BottomNav />
       <AdminFab />
       <DineInPromptModal />

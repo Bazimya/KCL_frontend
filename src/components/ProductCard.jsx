@@ -48,7 +48,7 @@ export default function ProductCard({ product }) {
   return (
     <Link
       to={`/product/${product.hash || encodeId(product._id)}`}
-      className="group card overflow-hidden flex flex-col hover:-translate-y-1 hover:shadow-xl transition-all duration-300"
+      className="group card overflow-hidden flex flex-col hover:shadow-xl transition-all duration-300"
     >
       <div className="relative aspect-square bg-espresso-50 overflow-hidden">
         <img

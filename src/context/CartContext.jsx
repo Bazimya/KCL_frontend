@@ -23,8 +23,20 @@ export const CartProvider = ({ children }) => {
   })
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(cart))
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cart)) } catch {}
   }, [cart])
+
+  // Keep every open tab in sync. Without this, a second tab still holding the
+  // old cart keeps showing (and re-saving) items after an order was placed
+  // in another tab.
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key !== STORAGE_KEY) return
+      try { setCart(e.newValue ? JSON.parse(e.newValue) : []) } catch { setCart([]) }
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
 
   const addToCart = useCallback((item, qty = 1) => {
     const itemType = item.itemType || 'machine'

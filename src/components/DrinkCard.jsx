@@ -17,8 +17,8 @@ export default function DrinkCard({ drink }) {
   }
 
   return (
-    <div className="card overflow-hidden flex hover:-translate-y-1 transition-transform duration-300">
-      <div className="w-28 h-28 sm:w-32 sm:h-32 shrink-0 bg-espresso-50 overflow-hidden">
+    <div className="card overflow-hidden flex sm:flex-col hover:shadow-xl transition-shadow duration-300">
+      <div className="w-32 min-h-[8.5rem] self-stretch shrink-0 sm:w-full sm:min-h-0 sm:aspect-[4/3] bg-espresso-50 overflow-hidden">
         {drink.image ? (
           <img src={fileUrl(drink.image)} alt={drink.name} className="w-full h-full object-cover" loading="lazy" />
         ) : (
@@ -27,7 +27,7 @@ export default function DrinkCard({ drink }) {
           </div>
         )}
       </div>
-      <div className="p-4 flex flex-col justify-center flex-1">
+      <div className="p-4 flex flex-col justify-center sm:justify-between flex-1">
         <h4 className="font-display font-bold text-espresso-900">{drink.name}</h4>
         {drink.desc && <p className="text-sm text-espresso-500 line-clamp-2 mt-0.5">{drink.desc}</p>}
         <div className="mt-2 flex items-center justify-between">

@@ -23,7 +23,7 @@ export default function CourseHub() {
           <Link
             key={c.to}
             to={c.to}
-            className="card p-6 opacity-0 animate-fadeUp hover:-translate-y-1 hover:shadow-xl transition-shadow duration-300"
+            className="card p-6 opacity-0 animate-fadeUp hover:shadow-xl transition-shadow duration-300"
             style={{ animationDelay: `${i * 120}ms`, animationFillMode: 'forwards' }}
           >
             <span className="w-14 h-14 rounded-2xl bg-gold/15 text-gold-dark flex items-center justify-center">

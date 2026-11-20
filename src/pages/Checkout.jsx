@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { Truck, Smartphone, Hash, CheckCircle2, ArrowRight, MapPin, Armchair } from 'lucide-react'
+import { Truck, Smartphone, Hash, CheckCircle2, ArrowRight, MapPin, Armchair, Copy, AlertTriangle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../api/axios'
 import { useCart } from '../context/CartContext'
@@ -9,6 +9,7 @@ import { useTable } from '../context/TableContext'
 import { formatRWF } from '../utils/format'
 import DineLocationModal from '../components/DineLocationModal'
 import QrScannerModal from '../components/QrScannerModal'
+import { rememberOrder } from '../utils/recentOrders'
 
 export default function Checkout() {
   const { cart, total, clearCart } = useCart()
@@ -100,6 +101,7 @@ export default function Checkout() {
       // TrackOrder.jsx picks this up on mount so "See My Order" lands
       // straight on this order's live status, no re-typing the code.
       localStorage.setItem('kcl_last_order_code', data.order.orderCode)
+      rememberOrder(data.order)
       setPlacedOrder(data.order)
       toast.success('Order placed! ☕')
     } catch (err) {
@@ -108,6 +110,12 @@ export default function Checkout() {
       setPlacing(false)
     }
   }
+
+  // The success screen replaces a long form - start it at the top so the
+  // order number is the first thing the customer sees.
+  useEffect(() => {
+    if (placedOrder) window.scrollTo({ top: 0, behavior: 'auto' })
+  }, [placedOrder])
 
   if (placedOrder) {
     return <ProofUploadStep order={placedOrder} needsProof={needsProof} onDone={() => navigate('/track')} />
@@ -263,6 +271,15 @@ function ProofUploadStep({ order, needsProof, onDone }) {
   const [uploading, setUploading] = useState(false)
   const [done, setDone] = useState(!needsProof)
 
+  const copyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(order.orderCode)
+      toast.success('Order number copied')
+    } catch {
+      toast('Please write the number down or take a screenshot', { icon: '📝' })
+    }
+  }
+
   const upload = async () => {
     if (!file) return toast.error('Please choose an image first')
     setUploading(true)
@@ -282,9 +299,23 @@ function ProofUploadStep({ order, needsProof, onDone }) {
   return (
     <div className="container-app py-16 max-w-xl text-center">
       <CheckCircle2 size={56} className="mx-auto text-green-600 mb-4" />
-      <h1 className="section-title">Successfully order placed!</h1>
-      <p className="text-espresso-500 mt-2">Order ID: <span className="font-mono font-bold">{order.orderCode}</span></p>
-      <p className="text-espresso-400 text-sm mt-1">Save this ID. You'll use it to track your order, no account needed.</p>
+      <h1 className="section-title">Order placed successfully!</h1>
+
+      <div className="card p-5 mt-6 border-2 border-gold">
+        <p className="text-xs font-bold uppercase tracking-wider text-espresso-500">Your order number</p>
+        <p className="font-mono text-3xl font-extrabold text-espresso-900 mt-1 select-all">{order.orderCode}</p>
+        <button type="button" onClick={copyCode} className="btn-outline !py-2 !px-4 text-sm mt-3">
+          <Copy size={15} /> Copy number
+        </button>
+        <div className="flex items-start gap-2 text-left bg-gold/10 rounded-xl p-3 mt-4">
+          <AlertTriangle size={18} className="text-gold-dark shrink-0 mt-0.5" />
+          <p className="text-sm text-espresso-700">
+            <strong>Keep this number safe.</strong> Take a screenshot or write it down: it's the only way to
+            track your order, since no account is needed. Staff may also ask for it when you collect.
+            It's also saved on this phone under <strong>Track My Order</strong>.
+          </p>
+        </div>
+      </div>
 
       {!done ? (
         <div className="card p-6 mt-8 text-left">

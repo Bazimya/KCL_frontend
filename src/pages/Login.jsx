@@ -1,23 +1,35 @@
 import { useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Coffee, Mail, Lock, ArrowRight } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { firstAllowedAdminPath, isStaffUser } from '../utils/adminAccess'
 
 export default function Login() {
-  const { login, loading } = useAuth()
+  const { user, login, loading } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [form, setForm] = useState({ email: '', password: '' })
 
-  const from = location.state?.from?.pathname || '/'
+  const from = location.state?.from?.pathname
+
+  // Staff go straight to the admin panel: back to the admin page they were
+  // trying to open, otherwise the first admin page they're allowed to use.
+  const destinationFor = (u) => {
+    if (!isStaffUser(u)) return from || '/'
+    if (from && from.startsWith('/admin')) return from
+    return firstAllowedAdminPath(u) || '/admin'
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
-      await login(form.email, form.password)
-      navigate(from, { replace: true })
+      const loggedIn = await login(form.email, form.password)
+      navigate(destinationFor(loggedIn), { replace: true })
     } catch {}
   }
+
+  // Already signed in as staff? Skip the form.
+  if (isStaffUser(user)) return <Navigate to={destinationFor(user)} replace />
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center py-14 px-4 bg-gray-200">

@@ -45,8 +45,8 @@ export default function Dashboard() {
         <StatCard icon={ShoppingBag} label="All-time Orders" value={stats.totalDrinksOrders} accent="bg-espresso-700" />
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="card p-6 lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="card p-4 sm:p-6 lg:col-span-2 min-w-0">
           <h3 className="font-display font-bold text-lg mb-4">Orders in the last 14 days</h3>
           <ResponsiveContainer width="100%" height={280}>
             <LineChart data={trendData}>
@@ -59,7 +59,7 @@ export default function Dashboard() {
           </ResponsiveContainer>
         </div>
 
-        <div className="card p-6">
+        <div className="card p-4 sm:p-6 min-w-0">
           <h3 className="font-display font-bold text-lg mb-4">Top Machines by Sales</h3>
           <div className="space-y-3">
             {stats.topProducts.map((p) => (
@@ -76,7 +76,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="card p-6 mt-6">
+      <div className="card p-4 sm:p-6 mt-6 min-w-0">
         <h3 className="font-display font-bold text-lg mb-4">Orders by Range Comparison</h3>
         <ResponsiveContainer width="100%" height={240}>
           <BarChart data={[
