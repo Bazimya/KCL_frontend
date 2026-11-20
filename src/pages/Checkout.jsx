@@ -62,7 +62,8 @@ export default function Checkout() {
   const [placing, setPlacing] = useState(false)
   const [placedOrder, setPlacedOrder] = useState(null)
 
-  const shippingFee = orderType === 'delivery' ? 20 : 0
+  // Same fee the server adds (admin Settings -> Payment -> Delivery fee).
+  const shippingFee = orderType === 'delivery' ? Number(settings.deliveryFee) || 0 : 0
   const grandTotal = total + shippingFee
   const needsProof = method === 'MoMo Pay' || method === 'MoMo Code'
   const paymentOptions = [
@@ -245,7 +246,7 @@ export default function Checkout() {
           </div>
           {orderType === 'delivery' && (
             <div className="flex items-center justify-between text-espresso-600">
-              <span>Shipping fee</span><span>{formatRWF(shippingFee)}</span>
+              <span>Delivery fee</span><span>{shippingFee > 0 ? formatRWF(shippingFee) : 'Free'}</span>
             </div>
           )}
           <div className="flex items-center justify-between pt-2 border-t border-espresso-100">

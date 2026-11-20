@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   Eye, Search, CheckCircle2, XCircle, Clock3, Bell, Check,
   Sun, CalendarMinus, CalendarDays, CalendarRange, Calendar, Infinity as InfinityIcon,
@@ -10,6 +11,7 @@ import Modal from '../../components/admin/Modal'
 import Pagination from '../../components/Pagination'
 import StatCard from '../../components/admin/StatCard'
 import { formatRWF, formatDate } from '../../utils/format'
+import { NEW_ORDERS_EVENT } from '../../hooks/useNewOrderAlerts'
 
 // One card per period, in the order they read left-to-right - each one
 // doubles as a filter button for the orders below. "Today" is where this
@@ -67,31 +69,6 @@ const statusIcon = (status) => {
   if (status === 'Served' || status === 'Delivered') return <CheckCircle2 size={15} className="text-green-600 shrink-0" />
   if (status === 'Cancelled') return <XCircle size={15} className="text-red-600 shrink-0" />
   return <Clock3 size={15} className="text-espresso-300 shrink-0" />
-}
-
-// Two short, pleasant tones synthesised on the spot (no audio file to
-// ship or fail to load) - just enough to make a new order impossible to
-// miss without being jarring.
-const playNewOrderSound = () => {
-  try {
-    const Ctx = window.AudioContext || window.webkitAudioContext
-    const ctx = new Ctx()
-    const now = ctx.currentTime
-    ;[880, 1318.5].forEach((freq, i) => {
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.type = 'sine'
-      osc.frequency.value = freq
-      const start = now + i * 0.16
-      gain.gain.setValueAtTime(0.0001, start)
-      gain.gain.exponentialRampToValueAtTime(0.25, start + 0.02)
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.35)
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-      osc.start(start)
-      osc.stop(start + 0.4)
-    })
-  } catch { /* browser blocked audio before any user interaction - fine, the toast still shows */ }
 }
 
 export default function AdminOrders() {
@@ -152,54 +129,22 @@ export default function AdminOrders() {
     }
   }, [viewOrder?._id, viewOrder?.proofOfPayment])
 
-  // Polls for brand-new orders regardless of whatever filter/period staff
-  // currently have selected (a new order is always "today", so this
-  // always looks there) - the first successful poll just learns what
-  // "already seen" means and stays quiet; only orders that arrive AFTER
-  // that trigger the sound + popup.
-  const lastSeenRef = useRef(null)
-  const initializedRef = useRef(false)
+  // New-order alerts (sound, popup, tab title) run in AdminLayout on every
+  // admin page; here we just refresh the list and counters when one lands,
+  // and open an order that was tapped in an alert.
+  const location = useLocation()
+  const navigate = useNavigate()
   useEffect(() => {
-    const poll = async () => {
-      try {
-        const { data } = await api.get('/orders', { params: { period: 'today', limit: 5, page: 1 } })
-        const items = data.items || []
-        if (!initializedRef.current) {
-          lastSeenRef.current = items[0] ? new Date(items[0].createdAt).getTime() : 0
-          initializedRef.current = true
-          return
-        }
-        const newOnes = items.filter((o) => new Date(o.createdAt).getTime() > lastSeenRef.current)
-        if (newOnes.length > 0) {
-          lastSeenRef.current = new Date(items[0].createdAt).getTime()
-          playNewOrderSound()
-          // Oldest-first, so if several arrived at once the toasts stack
-          // in the order they actually happened.
-          newOnes.slice().reverse().forEach((o) => {
-            toast.custom((t) => (
-              <div
-                onClick={() => { setViewOrder(o); toast.dismiss(t.id) }}
-                className="cursor-pointer bg-white rounded-2xl shadow-soft border-2 border-gold p-4 flex items-center gap-3 max-w-sm animate-fadeUp"
-              >
-                <span className="w-10 h-10 rounded-full bg-gold/15 text-gold-dark flex items-center justify-center shrink-0">
-                  <Bell size={18} />
-                </span>
-                <div className="min-w-0">
-                  <p className="font-bold text-espresso-900">New order placed!</p>
-                  <p className="text-sm text-espresso-500 truncate">{o.orderCode} · {formatRWF(o.paymentIntent?.amount)}</p>
-                </div>
-              </div>
-            ), { duration: 10000, position: 'top-right' })
-          })
-          load()
-          loadStats()
-        }
-      } catch { /* a missed poll just tries again next interval */ }
-    }
-    poll()
-    const interval = setInterval(poll, 8000)
-    return () => clearInterval(interval)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    const onNew = () => { load(); loadStats() }
+    window.addEventListener(NEW_ORDERS_EVENT, onNew)
+    return () => window.removeEventListener(NEW_ORDERS_EVENT, onNew)
+  }, [filter, search, period, page]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const o = location.state?.openOrder
+    if (!o) return
+    setViewOrder(o)
+    navigate(location.pathname, { replace: true, state: null })
+  }, [location.state]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const togglePeriod = (key) => setPeriod((p) => (p === key ? '' : key))
 
@@ -247,7 +192,7 @@ export default function AdminOrders() {
 
       {/* Each card is also a filter toggle for the orders below - click it
           again (or "Lifetime") to clear back to everything. */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 2xl:grid-cols-6 gap-3 mb-6">
         {PERIODS.map((p) => (
           <StatCard
             key={p.key}

@@ -168,13 +168,13 @@ export default function AdminTables() {
                     {t.active ? 'Active' : 'Hidden'}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 mt-4">
-                  <button onClick={() => downloadQr(t)} disabled={downloadingId === t._id} className="btn-outline flex-1 !py-2 text-sm">
+                <div className="flex flex-wrap items-center gap-2 mt-4">
+                  <button onClick={() => downloadQr(t)} disabled={downloadingId === t._id} className="btn-outline flex-1 min-w-[8rem] !py-2 text-sm">
                     <QrCode size={14} /> {downloadingId === t._id ? 'Generating...' : 'QR Code'}
                   </button>
                   <button onClick={() => openEdit(t)} className="btn-outline !py-2 !px-3" title="Edit"><Pencil size={14} /></button>
                   <button onClick={() => toggleActive(t)} className="btn-outline !py-2 !px-3" title={t.active ? 'Hide' : 'Activate'}><Power size={14} /></button>
-                  <button onClick={() => remove(t)} className="btn-outline !py-2 !px-3 !border-red-200 !text-red-600 hover:!bg-red-50"><Trash2 size={14} /></button>
+                  <button onClick={() => remove(t)} className="btn-outline !py-2 !px-3 !border-red-200 !text-red-600 hover:!bg-red-50" title="Delete" aria-label="Delete table"><Trash2 size={14} /></button>
                 </div>
               </div>
             ))}

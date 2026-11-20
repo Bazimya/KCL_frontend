@@ -137,6 +137,21 @@ export default function AdminSettings() {
             </div>
           </div>
 
+          <div className="border-t border-espresso-100 mt-6 pt-5">
+            <div className="flex items-start gap-3">
+              <Truck size={20} className="text-espresso-500 mt-0.5 shrink-0" />
+              <div className="flex-1">
+                <label className="label">Delivery fee for coffee machines (RWF)</label>
+                <input
+                  type="number" min="0" step="100" className="input max-w-xs"
+                  value={settings.deliveryFee ?? 0}
+                  onChange={(e) => setSettings({ ...settings, deliveryFee: e.target.value === '' ? '' : Number(e.target.value) })}
+                />
+                <p className="text-xs text-espresso-500 mt-1">Added to every delivery order at checkout. Use 0 for free delivery.</p>
+              </div>
+            </div>
+          </div>
+
           <button onClick={save} disabled={saving} className="btn-primary mt-6">
             <Save size={18} /> {saving ? 'Saving...' : 'Save Payment Settings'}
           </button>

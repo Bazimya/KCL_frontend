@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react'
 import { NavLink, Outlet, Link, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Coffee, Package, ShoppingCart, Users, Settings, ArrowLeft,
-  ShieldCheck, GraduationCap, LogOut, Grid3x3, X, Armchair, BookOpen, FileText,
+  ShieldCheck, GraduationCap, LogOut, Grid3x3, X, Armchair, BookOpen, FileText, BellRing,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
+import useNewOrderAlerts, { NEW_ORDERS_EVENT } from '../../hooks/useNewOrderAlerts'
 
 export default function AdminLayout() {
   const { isAdmin, can, logout } = useAuth()
@@ -13,8 +14,17 @@ export default function AdminLayout() {
   const [moreOpen, setMoreOpen] = useState(false)
   const [counts, setCounts] = useState(null)
 
+  const canOrders = isAdmin || can('manageOrders')
+  const { permission: alertPermission, requestPermission } = useNewOrderAlerts(canOrders)
+
   useEffect(() => {
-    api.get('/dashboard/nav-counts').then((r) => setCounts(r.data)).catch(() => {})
+    const loadCounts = () => api.get('/dashboard/nav-counts').then((r) => setCounts(r.data)).catch(() => {})
+    loadCounts()
+    // Keep the sidebar badges current: on every new order, and every minute
+    // for bookings/applications that arrive meanwhile.
+    window.addEventListener(NEW_ORDERS_EVENT, loadCounts)
+    const interval = setInterval(loadCounts, 60000)
+    return () => { window.removeEventListener(NEW_ORDERS_EVENT, loadCounts); clearInterval(interval) }
   }, [])
 
   const items = [
@@ -98,6 +108,11 @@ export default function AdminLayout() {
           ))}
         </nav>
         <div className="p-3 border-t border-white/10 space-y-1">
+          {canOrders && alertPermission === 'default' && (
+            <button onClick={requestPermission} className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-gold hover:bg-white/10 text-left">
+              <BellRing size={16} /> Turn on desktop order alerts
+            </button>
+          )}
           <Link to="/" className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-cream-light/70 hover:bg-white/10">
             <ArrowLeft size={16} /> Back to Store
           </Link>

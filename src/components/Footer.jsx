@@ -8,8 +8,8 @@ export default function Footer() {
   const { isStaff } = useAuth()
   return (
     <footer className="bg-coffee-gradient text-cream-light pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-0">
-      <div className="container-app py-8 md:py-14 grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-6 md:gap-10">
-        <div className="col-span-2 md:col-span-1">
+      <div className="container-app py-8 md:py-14 grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-6 md:gap-10 [overflow-wrap:anywhere]">
+        <div className="col-span-2 lg:col-span-1">
           <div className="flex items-center gap-2 mb-3">
             <span className="w-9 h-9 rounded-full bg-gold flex items-center justify-center text-espresso-900">
               <Coffee size={18} />
@@ -48,12 +48,12 @@ export default function Footer() {
           </ul>
         </div>
 
-        <div className="col-span-2 md:col-span-1">
+        <div className="col-span-2 lg:col-span-1">
           <h4 className="font-display font-bold mb-3">Visit / Call Us</h4>
           <ul className="space-y-2 md:space-y-3 text-sm text-cream-light/70">
-            <li className="flex items-center gap-2"><Phone size={15} className="text-gold" /> {settings.phone}</li>
-            <li className="flex items-center gap-2"><MapPin size={15} className="text-gold" /> {settings.address}</li>
-            <li className="flex items-center gap-2"><Mail size={15} className="text-gold" /> admin@kigalicoffeelab.com</li>
+            <li className="flex items-center gap-2 min-w-0"><Phone size={15} className="text-gold shrink-0" /> {settings.phone}</li>
+            <li className="flex items-center gap-2 min-w-0"><MapPin size={15} className="text-gold shrink-0" /> {settings.address}</li>
+            <li className="flex items-center gap-2 min-w-0"><Mail size={15} className="text-gold shrink-0" /> admin@kigalicoffeelab.com</li>
           </ul>
         </div>
       </div>

@@ -11,6 +11,7 @@ const defaultSettings = {
   address: 'KG 7 Ave, Kigali, Rwanda',
   momoPayNumber: '073 000 0000',
   momoCode: '',
+  deliveryFee: 0,
   payments: { cashEnabled: true, momoPayEnabled: true, momoCodeEnabled: true },
 }
 

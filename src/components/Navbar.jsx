@@ -118,7 +118,7 @@ export default function Navbar() {
       <div className="container-app flex items-center justify-between h-16 gap-2">
         <Link to="/" className="flex items-center gap-2 shrink-0">
           <img src="/logo.jpg" alt="Kigali Coffee Lab" className="w-9 h-9 rounded-full object-cover shrink-0" />
-          <span className="font-display font-extrabold text-lg text-cream-light hidden sm:block">
+          <span className="font-display font-extrabold text-lg text-cream-light hidden sm:block lg:hidden xl:block">
             {settings.siteName}
           </span>
         </Link>
