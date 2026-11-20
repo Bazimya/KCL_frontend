@@ -4,6 +4,19 @@ import toast from 'react-hot-toast'
 import api from '../api/axios'
 import Loader from '../components/Loader'
 
+// Booking hours (Kigali time) - must match KCL_backend/utils/bookingRules.js.
+// The server repeats them in every availability response and is the final word.
+const DEFAULT_HOURS = { open: 7, close: 21 }
+const pad = (n) => String(n).padStart(2, '0')
+const toMinutes = (hhmm) => { const [h, m] = (hhmm || '').split(':').map(Number); return h * 60 + (m || 0) }
+const formatClock = (mins) => {
+  const h = Math.floor(mins / 60), m = mins % 60
+  return `${((h + 11) % 12) + 1}:${pad(m)} ${h < 12 ? 'AM' : 'PM'}`
+}
+// The shop is in Kigali (UTC+2, no daylight saving): the date and time a
+// customer picks always mean Kigali time, whatever time zone their phone is in.
+const kigaliDate = (ymd, hhmm) => new Date(`${ymd}T${hhmm}:00+02:00`)
+
 const emptyForm = { customerName: '', customerPhone: '', partySize: 2, startDate: '', startTime: '', durationMinutes: 60, notes: '' }
 
 export default function BookTable() {
@@ -17,15 +30,21 @@ export default function BookTable() {
   const [availability, setAvailability] = useState(null)
   const [checking, setChecking] = useState(false)
   const [maxAdvanceDays, setMaxAdvanceDays] = useState(60)
+  const [hours, setHours] = useState(DEFAULT_HOURS)
 
   useEffect(() => {
     api.get('/tables').then((r) => setTables(r.data || [])).finally(() => setLoading(false))
   }, [])
 
-  const slotStart = form.startDate && form.startTime ? new Date(`${form.startDate}T${form.startTime}`) : null
+  const slotStart = form.startDate && form.startTime ? kigaliDate(form.startDate, form.startTime) : null
+  const duration = Number(form.durationMinutes) || 60
+  const latestStart = hours.close * 60 - duration
+  const hoursProblem = form.startTime && (toMinutes(form.startTime) < hours.open * 60 || toMinutes(form.startTime) > latestStart)
+    ? `We take bookings from ${formatClock(hours.open * 60)} to ${formatClock(hours.close * 60)}. For ${duration} minutes, please start between ${formatClock(hours.open * 60)} and ${formatClock(latestStart)}.`
+    : null
 
   const checkAvailability = async () => {
-    if (!slotStart || Number.isNaN(slotStart.getTime())) { setAvailability(null); return }
+    if (!slotStart || Number.isNaN(slotStart.getTime()) || hoursProblem) { setAvailability(null); return }
     setChecking(true)
     try {
       const { data } = await api.get('/tables/availability', {
@@ -34,6 +53,7 @@ export default function BookTable() {
       const map = Object.fromEntries((data.tables || []).map((t) => [t._id, t]))
       setAvailability(map)
       if (data.rules?.maxAdvanceDays) setMaxAdvanceDays(data.rules.maxAdvanceDays)
+      if (data.rules?.openingHour != null) setHours({ open: data.rules.openingHour, close: data.rules.closingHour })
       // Drop any picked table that turned out to be taken at this time.
       setSelectedIds((prev) => {
         const keep = prev.filter((id) => map[id]?.available)
@@ -74,12 +94,13 @@ export default function BookTable() {
     if (!form.customerName || !form.customerPhone || !form.startDate || !form.startTime) {
       return toast.error('Please fill in your name, phone, and the reservation date/time')
     }
+    if (hoursProblem) return toast.error(hoursProblem)
     if (seatsChosen < partySize) {
       return toast.error(`Your tables seat ${seatsChosen}, but your party is ${partySize}. Please add another table.`)
     }
     setSubmitting(true)
     try {
-      const startTime = new Date(`${form.startDate}T${form.startTime}`).toISOString()
+      const startTime = kigaliDate(form.startDate, form.startTime).toISOString()
       const { data } = await api.post('/tables/bookings', {
         tableIds: selectedIds,
         customerName: form.customerName,
@@ -160,7 +181,12 @@ export default function BookTable() {
             </div>
             <div>
               <label className="label flex items-center gap-1"><Clock size={14} /> Time</label>
-              <input type="time" name="startTime" className="input" value={form.startTime} onChange={handleChange} required />
+              <input type="time" name="startTime" className="input" step={900}
+                min={`${pad(hours.open)}:00`} max={`${pad(Math.floor(latestStart / 60))}:${pad(latestStart % 60)}`}
+                value={form.startTime} onChange={handleChange} required />
+              <p className={`text-xs mt-1 ${hoursProblem ? 'text-red-600 font-semibold' : 'text-espresso-400'}`}>
+                {hoursProblem || `Open for bookings ${formatClock(hours.open * 60)} to ${formatClock(hours.close * 60)} (Kigali time)`}
+              </p>
             </div>
           </div>
         </div>
@@ -170,7 +196,8 @@ export default function BookTable() {
           <p className="text-xs text-espresso-400 mb-3">
             {availability
               ? 'Tables already booked at your chosen time are greyed out. Select more than one if your group needs extra seating.'
-              : 'Pick a date and time first to see which tables are free.'}
+              : hoursProblem ? 'Choose a time within our booking hours to see which tables are free.'
+                : 'Pick a date and time first to see which tables are free.'}
           </p>
           {loading || checking ? <Loader label={checking ? 'Checking free tables...' : undefined} /> : (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
