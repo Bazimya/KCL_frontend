@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { CalendarClock, Users, CheckCircle2, Armchair, User, Phone, Timer, Calendar, Clock, StickyNote } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../api/axios'
@@ -13,14 +13,58 @@ export default function BookTable() {
   const [form, setForm] = useState(emptyForm)
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(null)
+  // Which tables are free for the chosen date/time/length (null = not chosen yet)
+  const [availability, setAvailability] = useState(null)
+  const [checking, setChecking] = useState(false)
+  const [maxAdvanceDays, setMaxAdvanceDays] = useState(60)
 
   useEffect(() => {
     api.get('/tables').then((r) => setTables(r.data || [])).finally(() => setLoading(false))
   }, [])
 
+  const slotStart = form.startDate && form.startTime ? new Date(`${form.startDate}T${form.startTime}`) : null
+
+  const checkAvailability = async () => {
+    if (!slotStart || Number.isNaN(slotStart.getTime())) { setAvailability(null); return }
+    setChecking(true)
+    try {
+      const { data } = await api.get('/tables/availability', {
+        params: { start: slotStart.toISOString(), duration: Number(form.durationMinutes) || 60 },
+      })
+      const map = Object.fromEntries((data.tables || []).map((t) => [t._id, t]))
+      setAvailability(map)
+      if (data.rules?.maxAdvanceDays) setMaxAdvanceDays(data.rules.maxAdvanceDays)
+      // Drop any picked table that turned out to be taken at this time.
+      setSelectedIds((prev) => {
+        const keep = prev.filter((id) => map[id]?.available)
+        if (keep.length !== prev.length) toast('Some tables you picked are taken at that time, so we unselected them.', { icon: 'ℹ️' })
+        return keep
+      })
+    } catch (err) {
+      setAvailability(null)
+      toast.error(err.response?.data?.msg || 'Could not check availability')
+    } finally {
+      setChecking(false)
+    }
+  }
+
+  // Re-check whenever the date, time or length changes.
+  useEffect(() => {
+    if (!form.startDate || !form.startTime) { setAvailability(null); return undefined }
+    const t = setTimeout(checkAvailability, 300)
+    return () => clearTimeout(t)
+  }, [form.startDate, form.startTime, form.durationMinutes]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const toggleTable = (id) => {
+    if (availability && !availability[id]?.available) return
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
   }
+
+  const seatsChosen = useMemo(
+    () => tables.filter((t) => selectedIds.includes(t._id)).reduce((sum, t) => sum + (t.capacity || 0), 0),
+    [tables, selectedIds],
+  )
+  const partySize = Number(form.partySize) || 1
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
@@ -29,6 +73,9 @@ export default function BookTable() {
     if (!selectedIds.length) return toast.error('Please choose at least one table')
     if (!form.customerName || !form.customerPhone || !form.startDate || !form.startTime) {
       return toast.error('Please fill in your name, phone, and the reservation date/time')
+    }
+    if (seatsChosen < partySize) {
+      return toast.error(`Your tables seat ${seatsChosen}, but your party is ${partySize}. Please add another table.`)
     }
     setSubmitting(true)
     try {
@@ -45,7 +92,9 @@ export default function BookTable() {
       setDone(data)
       toast.success('Table reserved!')
     } catch (err) {
-      toast.error(err.response?.data?.msg || 'Could not book that table')
+      toast.error(err.response?.data?.msg || 'Could not book that table', { duration: 6000 })
+      // Someone may have just taken a table - refresh what's free.
+      if (err.response?.status === 409) checkAvailability()
     } finally {
       setSubmitting(false)
     }
@@ -60,12 +109,14 @@ export default function BookTable() {
           {done.tables.map((t) => t.table.label).join(', ')} reserved for {done.customerName}, party of{' '}
           {done.partySize}, on {new Date(done.startTime).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}.
         </p>
-        <p className="text-espresso-400 text-sm mt-2">Just show up and scan the table's QR code when you arrive.</p>
+        <p className="text-espresso-600 mt-2">Your booking reference is <strong className="font-mono">B-{done._id}</strong>.</p>
+        <p className="text-espresso-400 text-sm mt-2">We've sent a confirmation text to {done.customerPhone}. Just show up and scan the table's QR code when you arrive.</p>
       </div>
     )
   }
 
   const today = new Date().toISOString().slice(0, 10)
+  const lastDay = new Date(Date.now() + maxAdvanceDays * 864e5).toISOString().slice(0, 10)
 
   return (
     <div className="container-app py-10 max-w-2xl">
@@ -105,7 +156,7 @@ export default function BookTable() {
             </div>
             <div>
               <label className="label flex items-center gap-1"><Calendar size={14} /> Date</label>
-              <input type="date" name="startDate" min={today} className="input" value={form.startDate} onChange={handleChange} required />
+              <input type="date" name="startDate" min={today} max={lastDay} className="input" value={form.startDate} onChange={handleChange} required />
             </div>
             <div>
               <label className="label flex items-center gap-1"><Clock size={14} /> Time</label>
@@ -116,26 +167,49 @@ export default function BookTable() {
 
         <div>
           <h3 className="font-display font-bold text-lg mb-3">Choose Table(s)</h3>
-          <p className="text-xs text-espresso-400 mb-3">Select more than one if your group needs extra seating.</p>
-          {loading ? <Loader /> : (
+          <p className="text-xs text-espresso-400 mb-3">
+            {availability
+              ? 'Tables already booked at your chosen time are greyed out. Select more than one if your group needs extra seating.'
+              : 'Pick a date and time first to see which tables are free.'}
+          </p>
+          {loading || checking ? <Loader label={checking ? 'Checking free tables...' : undefined} /> : (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {tables.map((t) => (
-                <button
-                  key={t._id}
-                  type="button"
-                  onClick={() => toggleTable(t._id)}
-                  className={`p-3 rounded-xl border-2 text-sm font-semibold transition flex items-center gap-2 ${
-                    selectedIds.includes(t._id) ? 'border-gold bg-gold/5 text-espresso-900' : 'border-espresso-100 text-espresso-600'
-                  }`}
-                >
-                  <Armchair size={16} />
-                  <span>
-                    {t.label}
-                    <span className="block text-xs font-normal text-espresso-400">seats {t.capacity}</span>
-                  </span>
-                </button>
-              ))}
+              {tables.map((t) => {
+                const info = availability?.[t._id]
+                const taken = availability && !info?.available
+                const selected = selectedIds.includes(t._id)
+                return (
+                  <button
+                    key={t._id}
+                    type="button"
+                    onClick={() => toggleTable(t._id)}
+                    disabled={!availability || taken}
+                    aria-pressed={selected}
+                    className={`p-3 rounded-xl border-2 text-sm font-semibold transition flex items-center gap-2 text-left ${
+                      taken ? 'border-espresso-100 bg-espresso-50 text-espresso-300 cursor-not-allowed'
+                        : selected ? 'border-gold bg-gold/5 text-espresso-900'
+                          : !availability ? 'border-espresso-100 text-espresso-400 cursor-not-allowed'
+                            : 'border-espresso-100 text-espresso-600 hover:border-gold/50'
+                    }`}
+                  >
+                    <Armchair size={16} className="shrink-0" />
+                    <span>
+                      {t.label}
+                      <span className="block text-xs font-normal">
+                        {taken ? (info?.reason === 'in_use' ? 'In use right now' : 'Booked at this time') : `seats ${t.capacity}`}
+                      </span>
+                    </span>
+                  </button>
+                )
+              })}
             </div>
+          )}
+          {selectedIds.length > 0 && (
+            <p className={`text-sm mt-3 font-semibold ${seatsChosen < partySize ? 'text-red-600' : 'text-green-700'}`}>
+              {seatsChosen < partySize
+                ? `These tables seat ${seatsChosen}, your party is ${partySize}. Add another table.`
+                : `${seatsChosen} seats for your party of ${partySize}.`}
+            </p>
           )}
         </div>
 
